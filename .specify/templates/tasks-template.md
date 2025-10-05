@@ -71,7 +71,7 @@
 
 ## Phase 3.5: Polish
 - [ ] T019 [P] Unit tests for validation in tests/unit/test_validation.py
-- [ ] T020 Performance tests (<200ms)
+- [ ] T020 [P] k6 performance tests for all use cases in tests/performance/
 - [ ] T021 [P] Update docs/api.md
 - [ ] T022 Remove duplication
 - [ ] T023 Run manual-testing.md
@@ -112,7 +112,11 @@ Task: "Integration test auth in tests/integration/test_auth.py"
    - Each story → integration test [P]
    - Quickstart scenarios → validation tasks
 
-4. **Ordering**:
+4. **From Use Cases**:
+   - Each use case → k6 performance test [P]
+   - Performance baselines → validation tasks
+
+5. **Ordering**:
    - Setup → Tests → Models → Services → Endpoints → Polish
    - Dependencies block parallel execution
 
@@ -122,6 +126,7 @@ Task: "Integration test auth in tests/integration/test_auth.py"
 - [ ] All contracts have corresponding tests
 - [ ] All entities have model tasks
 - [ ] All tests come before implementation
+- [ ] All use cases have k6 performance tests
 - [ ] Parallel tasks truly independent
 - [ ] Each task specifies exact file path
 - [ ] No task modifies same file as another [P] task

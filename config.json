@@ -1,0 +1,11 @@
+{
+    "name": "potrit-backend",
+    "listen": "127.0.0.1",
+    "port": 9191,
+    "api_key": "12345",
+    "postgre_host": "127.0.0.1",
+    "postgre_port": 5432,
+    "postgre_username": "postgres",
+    "postgre_password": "Zuk1n0",
+    "postgre_databse": "potrit"
+}

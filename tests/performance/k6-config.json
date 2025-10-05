@@ -1,0 +1,10 @@
+{
+  "hosts": {
+    "api": {
+      "address": "http://localhost:9191",
+      "defaultHeaders": {
+        "Content-Type": "application/json"
+      }
+    }
+  }
+}

@@ -1,50 +1,118 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report:
+Version change: 1.0.0 → 1.0.0 (initial constitution)
+Modified principles: N/A (new constitution)
+Added sections: Core Principles (SOLID, Clean Architecture, Testing, Performance), Development Standards, Quality Gates
+Removed sections: N/A
+Templates requiring updates:
+  ✅ plan-template.md (already aligned with SOLID principles)
+  ✅ spec-template.md (already aligned with testing requirements)
+  ⚠ tasks-template.md (needs k6 performance testing additions)
+  ✅ All command templates (generic agent guidance)
+Follow-up TODOs: Add k6 performance testing template to tasks-template.md
+-->
+
+# Potrit Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. SOLID Principles (Foundation)
+Every component MUST follow SOLID principles without exception:
+- **Single Responsibility**: Each class/module has one reason to change
+- **Open/Closed**: Open for extension, closed for modification
+- **Liskov Substitution**: Derived types must be substitutable for base types
+- **Interface Segregation**: Clients must not depend on interfaces they don't use
+- **Dependency Inversion**: High-level modules must not depend on low-level modules; both depend on abstractions
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+*Rationale*: SOLID principles ensure maintainable, testable, and flexible code that can evolve without breaking existing functionality.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. Clean Architecture (Structural)
+All code MUST follow Clean Architecture layering with explicit dependency rules:
+- **Domain Layer**: Core business logic, no external dependencies
+- **Application Layer**: Use cases orchestrate domain objects, depend only on domain
+- **Infrastructure Layer**: External concerns (DB, APIs, frameworks), implement interfaces defined in application
+- **Presentation Layer**: UI/CLI controllers, depend only on application layer
+- **Dependencies MUST point inward**: Infrastructure → Application → Domain
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+*Rationale*: Clean architecture isolates business logic from technical concerns, enabling independent testing, evolution, and technology swaps.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### III. Test-Driven Development (Process)
+EVERY use case MUST have comprehensive unit tests before implementation:
+- **TDD Mandatory**: Write failing test → Implement minimal code → Refactor
+- **100% Use Case Coverage**: Every use case in application layer must have unit tests
+- **Red-Green-Refactor**: Strict cycle enforced, no implementation before failing tests
+- **Test Independence**: Tests must not depend on external systems or test order
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+*Rationale*: TDD ensures correct behavior, provides living documentation, and guarantees that use cases work as specified.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### IV. Performance Testing with k6 (Quality)
+All critical paths MUST have performance validation using k6:
+- **Use Case Performance**: Every use case must have k6 test scripts
+- **Baseline Metrics**: Establish performance baselines for all endpoints/operations
+- **Regression Testing**: Performance tests run in CI to prevent regressions
+- **Load Testing**: Test under realistic load conditions based on expected usage
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+*Rationale*: Performance testing ensures system reliability and user experience under load, preventing production issues.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### V. Dependency Management (Integration)
+All dependencies MUST be explicitly managed and versioned:
+- **Interface Contracts**: Use dependency injection with explicit interfaces
+- **Version Pinning**: All dependencies must be locked to specific versions
+- **Minimal Dependencies**: Only include dependencies that are absolutely necessary
+- **Security Scanning**: All dependencies must pass security vulnerability scans
+
+*Rationale*: Explicit dependency management prevents version conflicts, security vulnerabilities, and ensures reproducible builds.
+
+## Development Standards
+
+### Code Quality Requirements
+- **Static Analysis**: All code must pass linting and formatting tools
+- **Code Coverage**: Minimum 90% line coverage for all critical paths
+- **Documentation**: All public interfaces must have comprehensive documentation
+- **Error Handling**: All error conditions must be explicitly handled and logged
+
+### Testing Strategy
+- **Unit Tests**: Every use case must have comprehensive unit tests
+- **Integration Tests**: All external integrations must have integration tests
+- **Contract Tests**: All API contracts must have contract tests
+- **Performance Tests**: All critical paths must have k6 performance tests
+
+### Build and Deployment
+- **Automated Builds**: All changes must trigger automated build and test processes
+- **Zero-Downtime**: Deployments must not impact system availability
+- **Rollback Capability**: All deployments must have immediate rollback capability
+- **Environment Parity**: All environments must be identical except for configuration
+
+## Quality Gates
+
+### Pre-commit Requirements
+- All code must pass static analysis and formatting checks
+- All tests must pass with coverage requirements met
+- All security scans must pass without critical vulnerabilities
+- All performance tests must meet baseline requirements
+
+### Merge Requirements
+- Peer review approval required for all changes
+- All automated checks must pass
+- Documentation must be updated for all API changes
+- Performance impact must be assessed and documented
+
+### Release Requirements
+- Full integration test suite must pass
+- Performance regression tests must pass
+- Security audit must pass
+- Rollback plan must be documented and tested
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes all other development practices and guidelines. Amendments require:
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+1. **Proposal**: Written proposal detailing changes and rationale
+2. **Review**: Technical review by architecture team
+3. **Approval**: Majority approval from development team
+4. **Documentation**: Update to this constitution with version increment
+5. **Communication**: Team notification and training on changes
+
+All pull requests and code reviews must verify compliance with constitutional principles. Any deviation from these principles must be explicitly justified and approved by the architecture team.
+
+**Version**: 1.0.0 | **Ratified**: 2025-10-05 | **Last Amended**: 2025-10-05
