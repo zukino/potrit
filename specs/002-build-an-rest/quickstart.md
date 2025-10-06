@@ -21,14 +21,17 @@ cd potrit
 # Create database
 createdb potrit
 
-# Run migrations (will be created during implementation)
-psql potrit -f migrations/001_initial_schema.sql
+# Run migrations using migration command (will be created during implementation)
+go run cmd/server/main.go migrate up
+
+# Optionally seed with dummy data for development
+go run cmd/server/main.go seed run
 ```
 
 ### 3. Configure Application
 Copy and edit the configuration:
 ```bash
-cp config.json.example config.json
+cp example_config.json config.json
 # Edit config.json with your database credentials
 ```
 
@@ -243,12 +246,46 @@ k6 run tests/performance/basic_load_test.js
 - Check for slow queries with `EXPLAIN ANALYZE`
 - Verify k6 performance test results meet targets
 
+## Enhanced Database Management
+
+### Migration Commands
+```bash
+# Run all pending migrations
+go run cmd/server/main.go migrate up
+
+# Rollback last migration
+go run cmd/server/main.go migrate down
+
+# Check migration status
+go run cmd/server/main.go migrate status
+
+# Create new migration file
+go run cmd/server/main.go migrate create add_new_feature
+```
+
+### Seed Data Commands
+```bash
+# Generate seed data with default settings
+go run cmd/server/main.go seed run
+
+# Generate specific amount of seed data
+go run cmd/server/main.go seed run --users 100 --posts 10
+
+# Clear all seed data
+go run cmd/server/main.go seed reset
+
+# Validate seed data integrity
+go run cmd/server/main.go seed validate
+```
+
 ## Next Steps
 
 1. **Run Contract Tests**: Execute all contract tests to verify API compliance
 2. **Performance Testing**: Run full k6 test suite
 3. **Integration Testing**: Test with actual frontend application
 4. **Monitoring Setup**: Configure logging and metrics collection
+5. **Migration Testing**: Test migration rollback procedures in development
+6. **Seed Data Testing**: Verify seed data generation works correctly
 
 ## Support
 

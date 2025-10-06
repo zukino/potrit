@@ -1,7 +1,9 @@
-# Data Model: Social Media API
+# Data Model: Social Media REST API
 
 **Date**: 2025-10-05
+**Feature**: 002-build-an-rest
 **Storage**: PostgreSQL with immediate consistency
+**Enhanced**: Migration and seed data support
 
 ## Entity Relationships
 
@@ -12,6 +14,7 @@ erDiagram
     User ||--o{ Connection : receives
     User ||--o{ Like : gives
     User ||--o{ Comment : writes
+    User ||--o{ ErrorLog : generates
     Post ||--o{ Like : receives
     Post ||--o{ Comment : has
 
@@ -55,6 +58,19 @@ erDiagram
         text content
         timestamptz created_at
         timestamptz updated_at
+    }
+
+    ErrorLog {
+        uuid id PK
+        uuid user_id FK
+        string error_type
+        string message
+        text stack_trace
+        string endpoint
+        string method
+        string ip_address
+        string user_agent
+        timestamptz occurred_at
     }
 ```
 
@@ -160,6 +176,37 @@ erDiagram
 - Comments cannot be deleted if they have replies
 - Comments inherit visibility from parent post
 
+### ErrorLog
+**Purpose**: Stores error logs for debugging and monitoring as required by the constitution
+**Key Attributes**:
+- `id`: UUID primary key
+- `user_id`: Foreign key to User who encountered the error (nullable for system errors)
+- `error_type`: Type/category of error (authentication, validation, database, etc.)
+- `message`: Human-readable error message
+- `stack_trace`: Full stack trace for debugging (stored as text)
+- `endpoint`: API endpoint where error occurred
+- `method`: HTTP method (GET, POST, PUT, DELETE)
+- `ip_address`: Client IP address for security tracking
+- `user_agent`: Client user agent string
+- `occurred_at`: Timestamp when error occurred
+
+**Validation Rules**:
+- Error type must be predefined category
+- Message must be 1-1000 characters
+- Stack trace can be up to 10000 characters
+- Endpoint must be valid path format
+- Method must be valid HTTP method
+- IP address must be valid IPv4/IPv6 format
+- Timestamp is UTC
+
+**Business Rules**:
+- All error conditions are logged per constitutional requirement
+- System errors (no user_id) are logged separately
+- Sensitive data is filtered from stack traces
+- Logs are batch-processed every hour as per constitution
+- Historical logs are archived after 90 days
+- PII in logs is masked for privacy compliance
+
 ## Database Constraints
 
 ### Primary Keys
@@ -182,6 +229,9 @@ Performance-optimized indexes for common queries:
 - `connections(addressee_id, status)` - Received requests
 - `likes(post_id)` - Like counts
 - `comments(post_id, created_at)` - Post comments
+- `error_logs(occurred_at)` - Time-based log queries
+- `error_logs(error_type, occurred_at)` - Error type filtering
+- `error_logs(user_id, occurred_at)` - User-specific error history
 
 ### Constraints
 - Unique constraints prevent duplicates
@@ -206,3 +256,105 @@ Performance-optimized indexes for common queries:
 - User enumeration prevented on endpoints
 - Rate limiting on sensitive operations
 - Audit trails for all data modifications
+
+## Migration Strategy
+
+### Migration Management
+- **Location**: `/internal/infrastructure/database/migrations/`
+- **Format**: SQL files with version numbering (001_..., 002_...)
+- **Features**:
+  - Up and down migrations
+  - Version tracking with migration history table
+  - Automatic dependency resolution
+  - Rollback capabilities
+
+### Migration Files Structure
+```
+migrations/
+├── 001_create_users_table.up.sql
+├── 001_create_users_table.down.sql
+├── 002_create_posts_table.up.sql
+├── 002_create_posts_table.down.sql
+├── 003_create_connections_table.up.sql
+├── 003_create_connections_table.down.sql
+├── 004_create_likes_table.up.sql
+├── 004_create_likes_table.down.sql
+├── 005_create_comments_table.up.sql
+├── 005_create_comments_table.down.sql
+├── 006_create_error_logs_table.up.sql
+├── 006_create_error_logs_table.down.sql
+└── 007_add_constraints_and_indexes.up.sql
+    └── 007_add_constraints_and_indexes.down.sql
+```
+
+### Migration Command Interface
+- **Up Migrations**: Apply pending migrations in order
+- **Down Migrations**: Rollback specific number of migrations
+- **Status**: Show current migration version and pending migrations
+- **Create**: Generate new migration file templates
+
+## Seed Data Strategy
+
+### Seed Data Management
+- **Location**: `/internal/infrastructure/database/seed/`
+- **Purpose**: Development and testing environment setup
+- **Features**:
+  - Configurable data volumes
+  - Realistic dummy data generation
+  - Relationship-aware data creation
+  - Idempotent operations
+
+### Seed Data Structure
+```
+seed/
+├── users.json              # User account definitions
+├── posts.json              # Post content templates
+├── connections.json        # Connection relationship patterns
+├── seed.go                 # Seed data generation logic
+└── README.md               # Seed data usage instructions
+```
+
+### Seed Data Features
+- **User Generation**: Create realistic user profiles with varied names, emails
+- **Content Generation**: Generate meaningful post and comment content
+- **Relationship Creation**: Establish connections, likes, and comments between users
+- **Environment-Specific**: Different seed sets for development vs testing
+
+### Seed Data Command Interface
+- **Run**: Execute seed data generation
+- **Reset**: Clear all seed data
+- **Validate**: Verify seed data integrity
+- **Custom**: Apply specific seed data scenarios
+
+## Repository Interface Examples
+
+```go
+// MigrationRepository interface for database migration management
+type MigrationRepository interface {
+    GetCurrentVersion() (int, error)
+    SetVersion(version int) error
+    CreateMigrationTable() error
+}
+
+// SeedRepository interface for seed data management
+type SeedRepository interface {
+    SeedUsers(count int) error
+    SeedPosts(postsPerUser int) error
+    SeedConnections(connectionsPerUser int) error
+    SeedLikes(likesPerPost int) error
+    SeedComments(commentsPerPost int) error
+    ClearAllSeedData() error
+}
+
+// ErrorLogRepository interface for error log management
+type ErrorLogRepository interface {
+    LogError(error *ErrorLog) error
+    GetErrorsByUser(userID uuid.UUID, limit int, offset int) ([]*ErrorLog, error)
+    GetErrorsByType(errorType string, limit int, offset int) ([]*ErrorLog, error)
+    GetErrorsByTimeRange(start, end time.Time, limit int, offset int) ([]*ErrorLog, error)
+    ArchiveOldErrors(beforeDate time.Time) (int, error)
+    GetErrorStatistics(timeRange time.Time) (map[string]int, error)
+}
+```
+
+This enhanced data model provides comprehensive support for both application data management and development workflow automation through migration and seed data functionality.

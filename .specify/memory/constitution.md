@@ -69,13 +69,11 @@ All dependencies MUST be explicitly managed and versioned:
 - **Static Analysis**: All code must pass linting and formatting tools
 - **Code Coverage**: Minimum 90% line coverage for all critical paths
 - **Documentation**: All public interfaces must have comprehensive documentation
-- **Error Handling**: All error conditions must be explicitly handled and logged
+- **Error Handling**: All error conditions must be logged in file and send to database every 1 hour
 
 ### Testing Strategy
-- **Unit Tests**: Every use case must have comprehensive unit tests
 - **Integration Tests**: All external integrations must have integration tests
-- **Contract Tests**: All API contracts must have contract tests
-- **Performance Tests**: All critical paths must have k6 performance tests
+- **Contract Tests**: All API contracts must have contract tests in test_contract.sh with curl
 
 ### Build and Deployment
 - **Automated Builds**: All changes must trigger automated build and test processes

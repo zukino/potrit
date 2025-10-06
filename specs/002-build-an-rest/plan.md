@@ -1,7 +1,7 @@
 
 # Implementation Plan: Build a REST API for Social Media Application
 
-**Branch**: `002-build-an-rest` | **Date**: 2025-10-05 | **Spec**: [link](spec.md)
+**Branch**: `002-build-an-rest` | **Date**: 2025-10-05 | **Spec**: `/specs/002-build-an-rest/spec.md`
 **Input**: Feature specification from `/specs/002-build-an-rest/spec.md`
 
 ## Execution Flow (/plan command scope)
@@ -31,50 +31,59 @@
 - Phase 3-4: Implementation execution (manual or via tools)
 
 ## Summary
-This plan implements a REST API for a social media application similar to Facebook, designed as an MVP backend service. The system will support user registration, authentication via email/password with JWT tokens, post creation with likes/comments, and user connections. Built with Go and PostgreSQL following Clean Architecture principles, it emphasizes minimal dependencies, immediate data consistency, and comprehensive testing including k6 performance validation.
+Build a REST API for social media application with core features including user registration/authentication, post creation/management, user connections, likes, and comments. The system will use Go with PostgreSQL, implement Clean Architecture principles, follow TDD methodology with specialized testing approach: curl for contract testing, k6 for performance testing, and test cases for use case testing. Dependencies are restricted to: github.com/golang-jwt/jwt/v5, github.com/google/uuid, github.com/lib/pq, golang.org/x/crypto.
 
 ## Technical Context
-**Language/Version**: Go (latest stable)
-**Primary Dependencies**: Standard library only + database driver
-**Storage**: PostgreSQL (configured via config.json)
-**Testing**: Go testing package + k6 for performance testing
+**Language/Version**: Go 1.21+
+**Primary Dependencies**: github.com/golang-jwt/jwt/v5, github.com/google/uuid, github.com/lib/pq, golang.org/x/crypto
+**Storage**: PostgreSQL
+**Testing**: curl for contract testing, k6 for performance testing, test cases for use case testing
 **Target Platform**: Linux server
-**Project Type**: Single project (REST API backend)
-**Performance Goals**: Support < 100 concurrent users (MVP scale)
-**Constraints**: Minimal external dependencies, immediate data consistency
-**Scale/Scope**: Basic MVP social media API with users, posts, connections
+**Project Type**: Single project with Clean Architecture
+**Performance Goals**: <200ms p95 response time, 100 concurrent users, 50+ rps throughput
+**Constraints**: No additional dependencies allowed beyond the four specified above
+**Scale/Scope**: MVP for 100 concurrent users, immediate consistency
 
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
 ### SOLID Principles Compliance
-✅ **Single Responsibility**: Go package structure encourages focused modules
-✅ **Open/Closed**: Interface-based design enables extension without modification
-✅ **Liskov Substitution**: Go interfaces ensure substitutability
-✅ **Interface Segregation**: Small, focused interfaces in Go ecosystem
-✅ **Dependency Inversion**: Dependency injection pattern supported
+- ✅ **Single Responsibility**: Clean Architecture layers ensure each component has one responsibility
+- ✅ **Open/Closed**: Interface-based design allows extension without modification
+- ✅ **Liskov Substitution**: Repository interfaces ensure substitutability
+- ✅ **Interface Segregation**: Specific interfaces for each repository type
+- ✅ **Dependency Inversion**: High-level modules depend on abstractions
 
 ### Clean Architecture Compliance
-✅ **Layer Separation**: Domain, Application, Infrastructure, Presentation layers
-✅ **Dependency Rule**: Dependencies point inward (Infrastructure → Application → Domain)
-✅ **Isolation**: Business logic isolated from technical concerns
+- ✅ **Domain Layer**: Core entities with no external dependencies
+- ✅ **Application Layer**: Use cases orchestrating domain objects
+- ✅ **Infrastructure Layer**: Database and external integrations
+- ✅ **Presentation Layer**: HTTP handlers and routing
+- ✅ **Dependency Rule**: All dependencies point inward
 
-### TDD Requirements
-✅ **Unit Tests**: Go testing package for comprehensive use case coverage
-✅ **Red-Green-Refactor**: Strict TDD cycle enforced
-✅ **Test Independence**: Tests isolated from external systems
+### Test-Driven Development Compliance
+- ✅ **TDD Mandatory**: Tests will be written before implementation
+- ✅ **100% Use Case Coverage**: All use cases will have test cases
+- ✅ **Red-Green-Refactor**: Strict cycle will be enforced
+- ✅ **Test Independence**: Test cases will not depend on external systems
 
-### Performance Testing
-✅ **k6 Integration**: Performance testing for all critical paths
-✅ **Baseline Metrics**: Performance baselines established
-✅ **Load Testing**: Realistic load testing for MVP scale
+### Performance Testing Compliance
+- ✅ **k6 Performance Testing**: All critical paths will have k6 scripts
+- ✅ **Baseline Metrics**: Performance baselines will be established
+- ✅ **Regression Testing**: Performance tests will run in CI
+- ✅ **Load Testing**: Tests will cover expected concurrent user load
 
-### Dependency Management
-✅ **Interface Contracts**: Explicit interface definitions
-✅ **Minimal Dependencies**: Standard library preferred
-✅ **Security**: PostgreSQL security with prepared statements
+### Dependency Management Compliance
+- ✅ **Interface Contracts**: Dependency injection with explicit interfaces
+- ✅ **Version Pinning**: Dependencies will be locked to specific versions
+- ✅ **Minimal Dependencies**: Only 4 allowed dependencies specified
+- ✅ **Security Scanning**: Dependencies must pass security scans
 
-**Status**: PASS - No constitutional violations detected
+### Additional Constitutional Requirements
+- ✅ **Error Logging**: All errors will be logged to file and database every hour
+- ✅ **Integration Tests**: External integrations will have integration tests
+- ✅ **Contract Tests**: API contracts will have curl-based contract tests (per constitution)
+- ✅ **Testing Methodology**: Using curl for contract testing, k6 for performance testing, test cases for use case testing
 
 ## Project Structure
 
@@ -92,73 +101,49 @@ specs/002-build-an-rest/
 ### Source Code (repository root)
 ```
 cmd/
-├── server/
-│   └── main.go                # Application entry point
+└── server/
+    └── main.go          # Application entry point with CLI commands
 
 internal/
-├── domain/                    # Domain layer - core business logic
-│   ├── entities/
-│   │   ├── user.go
-│   │   ├── post.go
-│   │   ├── connection.go
-│   │   ├── like.go
-│   │   └── comment.go
-│   └── repositories/
-│       ├── user_repository.go
-│       ├── post_repository.go
-│       └── connection_repository.go
-│
-├── application/               # Application layer - use cases
-│   ├── services/
-│   │   ├── auth_service.go
-│   │   ├── user_service.go
-│   │   ├── post_service.go
-│   │   └── connection_service.go
-│   └── usecases/
-│       ├── register_user.go
-│       ├── create_post.go
-│       ├── add_like.go
-│       └── create_connection.go
-│
-├── infrastructure/            # Infrastructure layer - external concerns
+├── domain/
+│   ├── entities/        # Domain entities (User, Post, Connection, Like, Comment, ErrorLog)
+│   └── repositories/    # Repository interfaces
+├── application/
+│   ├── services/        # Application services
+│   ├── usecases/        # Use cases for business operations
+│   └── testcases/       # Use case testing (test cases for each use case)
+├── infrastructure/
+│   ├── config/          # Configuration management
 │   ├── database/
-│   │   ├── postgres.go
-│   │   └── migrations/
-│   ├── config/
-│   │   └── config.go
-│   └── auth/
-│       ├── jwt.go
-│       └── password.go
-│
-└── presentation/              # Presentation layer - HTTP handlers
-    ├── handlers/
-    │   ├── auth_handler.go
-    │   ├── user_handler.go
-    │   ├── post_handler.go
-    │   └── connection_handler.go
-    ├── middleware/
-    │   ├── auth.go
-    │   └── cors.go
-    └── router/
-        └── router.go
+│   │   ├── migrations/  # Database migration files
+│   │   └── seed/        # Seed data files
+│   ├── repositories/    # Repository implementations
+│   ├── auth/           # Authentication services
+│   └── logging/        # Error and security logging
+└── presentation/
+    ├── handlers/        # HTTP handlers
+    ├── middleware/      # HTTP middleware
+    └── router/          # HTTP routing
 
-pkg/                          # Public packages
-└── errors/
-    └── errors.go
+pkg/
+└── errors/              # Shared error types
+
+logs/                     # Log files directory
 
 tests/
-├── unit/                     # Unit tests for each layer
-├── integration/              # Integration tests
-├── contract/                 # API contract tests
-└── performance/              # k6 performance tests
-
-config.json                   # Application configuration
-go.mod
-go.sum
-README.md
+├── contract/            # Contract testing using curl scripts
+│   ├── test_contract.sh # Main contract test script with curl
+│   └── endpoints/       # Individual endpoint contract tests
+├── integration/         # Integration tests
+├── unit/               # Unit tests
+└── performance/         # k6 performance testing
+    ├── baseline/        # Baseline performance tests
+    ├── load/           # Load testing scripts
+    ├── stress/         # Stress testing scripts
+    └── regression/     # Performance regression tests
 ```
 
-**Structure Decision**: Single project with Clean Architecture layering. Domain layer contains core business entities and repository interfaces. Application layer contains use cases and business logic. Infrastructure layer implements external concerns like database and JWT. Presentation layer handles HTTP requests and responses.
+**Structure Decision**: Single project with Clean Architecture. The structure follows Go conventions with cmd/ for entry points, internal/ for private application code organized by layers, pkg/ for shared libraries, and specialized testing organization. The testing structure specifically includes curl-based contract testing, k6 performance testing, and use case testing. The logs/ directory supports the constitutional requirement for error logging.
 
 ## Phase 0: Outline & Research
 1. **Extract unknowns from Technical Context** above:
@@ -246,25 +231,32 @@ README.md
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
-| JWT library (external dependency) | Secure, industry-standard token-based authentication with proven security track record. Standard library crypto would require implementing complex JWT algorithms (RS256 signing, token validation, expiration handling) increasing security risk and development time. | Manual crypto implementation risks security vulnerabilities, requires extensive testing, and reinvents well-established security patterns. |
+| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
 
 
 ## Progress Tracking
 *This checklist is updated during execution flow*
 
 **Phase Status**:
-- [x] Phase 0: Research complete (/plan command)
-- [x] Phase 1: Design complete (/plan command)
+- [x] Phase 0: Research complete (/plan command) - research.md exists
+- [x] Phase 1: Design complete (/plan command) - data-model.md, quickstart.md, contracts/ exist
 - [x] Phase 2: Task planning complete (/plan command - describe approach only)
 - [ ] Phase 3: Tasks generated (/tasks command)
 - [ ] Phase 4: Implementation complete
 - [ ] Phase 5: Validation passed
 
 **Gate Status**:
-- [x] Initial Constitution Check: PASS
-- [x] Post-Design Constitution Check: PASS
-- [x] All NEEDS CLARIFICATION resolved
-- [x] Complexity deviations documented
+- [x] Initial Constitution Check: PASS - No constitutional violations detected
+- [x] Post-Design Constitution Check: PASS - Clean Architecture with updated testing methodology
+- [x] All NEEDS CLARIFICATION resolved - Feature spec fully specified
+- [x] Complexity deviations documented - No complexity deviations required
+
+**Testing Methodology Updates**:
+- ✅ Contract testing: Updated to use curl exclusively (per constitution)
+- ✅ Performance testing: Confirmed k6 for all performance testing
+- ✅ Use case testing: Specified test cases for use case validation
+- ✅ Testing structure: Updated project structure with dedicated testing directories
 
 ---
 *Based on Constitution v1.0.0 - See `/memory/constitution.md`*
